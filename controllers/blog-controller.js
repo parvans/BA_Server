@@ -27,12 +27,12 @@ export default {
         if(!existingUser){
             return res.status(400).json({message:"Unable to find the user with this id"})
         }
-        const uploadedResponse=await cloudNary.uploader.upload(image,{
-            upload_preset:'blog_images'
-        })
+        // const uploadedResponse=await cloudNary.uploader.upload(image,{
+        //     upload_preset:'blog_images'
+        // })
         const newBlog=new Blog({
             title,
-            description,
+            description:cat(description),
             image,
             //:uploadedResponse.public_id,
             user

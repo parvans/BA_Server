@@ -9,10 +9,10 @@ const blogSchema = {
 export const User = mongoose.model(
   "User",
   new mongoose.Schema({
-    image: {
-      type: String,
-      required: true,
-    },
+    // image: {
+    //   type: String,
+    //   required: true,
+    // },
     name: {
       type: String,
       required: true,
@@ -28,6 +28,8 @@ export const User = mongoose.model(
       minlength:8
     },
     blogs:[blogSchema]
+  },{
+    timestamps:true
   })
 );
 
