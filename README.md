@@ -5,7 +5,7 @@ This is a blogging application server that allows users to create, read, update,
 1. Clone the repository
 2. Run `npm install` to install the dependencies
 3. Run `npm start` to start the server
-4. Navigate to `localhost:3000` in your browser
+4. Navigate to `localhost:8000` in your browser
 
 ## Usage
 1. Create a new user by clicking the "Create New User" button
