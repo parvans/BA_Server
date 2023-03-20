@@ -1,7 +1,8 @@
 import express from 'express'
 import blogController from '../controllers/blog-controller.js'
+import auth from '../middleware/auth.js'
 const blogRouter=express.Router()
-blogRouter.get('/',blogController.getallBlogs)
+blogRouter.get('/',auth,blogController.getallBlogs)
 blogRouter.post('/add',blogController.addBlog)
 blogRouter.put('/update/:id',blogController.updateBlog)
 blogRouter.get('/:id',blogController.getByid)
