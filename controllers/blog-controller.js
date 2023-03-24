@@ -13,7 +13,7 @@ export default {
         if(!blogs){
             return res.status(404).json({message:'No Blogs Found'})
         }else{
-            return res.status(200).json({blogs})
+            return res.status(200).json({data:blogs})
         }
     },
     addBlog:async(req,res,next)=>{
