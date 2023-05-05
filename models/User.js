@@ -27,6 +27,9 @@ export const User = mongoose.model(
       required: true,
       minlength:8
     },
+    otp: {
+      type: String,
+    },
     blogs:[blogSchema]
   },{
     timestamps:true

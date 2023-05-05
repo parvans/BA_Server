@@ -74,3 +74,53 @@ export const login = async (req, res) => {
     }
 
 }
+
+export const verifyEmail = async (req, res) => {
+    const { email } = req.body
+    let user = await User.findOne({ email })
+    if (!user) {
+        return res.status(400).send('Invalid email')
+    } else {
+        try {
+            // gelerate code
+            const otpCode = nanoid(5).toUpperCase()
+            // save to db
+            user.otpCode = otpCode
+            await user.save()
+
+            // send email by using nodemailer
+
+            const transporter = nodemailer.createTransport({
+                host: 'smtp.gmail.com',
+                // port: 993,
+                secure: false,
+                auth: {
+                    // type:"login",
+                    user: "parvansajeevan666@gmail.com",
+                    pass: "ksjwpghjpcqjvmwq"
+                }
+
+            });
+
+            const mailOption = {
+                from: "parvansajeevan666@gmail.com",
+                to: email,
+                subject: "Password Reset mail ⚒️",
+                text: `Your OTP is : ${otpCode}`,
+                // html: "Hello worlds"
+            }
+            transporter.sendMail(mailOption, (error, info) => {
+                if (error) {
+                    console.log(error)
+                } else {
+                    console.log(info)
+                }
+            });
+
+            res.status(200).send('Email sent')
+        } catch (error) {
+            return res.status(400).send(error)
+        }
+    }
+
+}
