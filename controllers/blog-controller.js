@@ -21,6 +21,7 @@ export const addBlog = async (req, res, next) => {
     let existingUser;
     try{
         existingUser=await User.findById({_id:userId})
+        
     }catch(err){
         return console.log(err);
     }
@@ -29,6 +30,10 @@ export const addBlog = async (req, res, next) => {
     }
     const theDesc=description.split(' ').map((item) => item.charAt(0).toUpperCase() + item.slice(1).toLowerCase()).join(" ");
     const theTitle=title.split(' ').map((item) => item.charAt(0).toUpperCase() + item.slice(1).toLowerCase()).join(" ");
+    const exBlog=await Blog.findOne({title:theTitle})
+    if(exBlog){
+        return res.status(400).json({message:"Blog with this title already exists"})
+    }
     const newBlog=new Blog({
         title:theTitle,
         description:theDesc,
@@ -90,16 +95,15 @@ export const deleteBlog = async (req, res) => {
     const blogId=req.query.id
     let blog;
     try{
-        blog=await Blog.findByIdAndRemove(blogId).populate('user')
-        await blog.user.blogs.pull(blog)
-        await blog.user.save()
+        blog=await Blog.findById(blogId)
+        if(!blog){
+            return res.status(404).json({message:'Unable To Delete'})
+        }else{
+            await Blog.findByIdAndDelete(blogId)
+            return res.status(200).json({message:'Blog Successfully Deleted'})
+        }
     }catch(err){
         console.log(err);
-    }
-    if(!blog){
-        return res.status(404).json({message:'Unable To Delete'})
-    }else{
-        return res.status(200).json({message:'Blog Successfully Deleted'})
     }
 }
 
@@ -114,6 +118,6 @@ export const usersBlogs = async (req, res) => {
     if(!userBlogs){
         return res.status(404).json({message:"No Blogs Found"})
     }
-    return res.status(200).json({data:userBlogs})
+    return res.status(200).json({data:userBlogs.blogs.reverse()})
 }
 
