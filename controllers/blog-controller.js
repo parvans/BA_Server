@@ -97,7 +97,7 @@ export const deleteBlog = async (req, res) => {
     try{
         blog=await Blog.findById(blogId)
         if(!blog){
-            return res.status(404).json({message:'Unable To Delete'})
+            return res.status(404).json({message:'No Blog Found'})
         }else{
             await Blog.findByIdAndDelete(blogId)
             return res.status(200).json({message:'Blog Successfully Deleted'})

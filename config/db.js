@@ -1,8 +1,10 @@
 import mongoose from "mongoose"
+import dotenv from "dotenv"
+dotenv.config()
 const dataBase = () => {
     try {
-    // mongoose.set('strictQuery', false);
-        mongoose.connect("mongodb://127.0.0.1/blogApp")
+    // mongoose.set('strictQuery', false);  
+        mongoose.connect(process.env.MONGODB_URI)
             .then(() => console.log("Connected to MongoDB 🫙"))
             .catch((err) => console.error(err));
     } catch (error) {
