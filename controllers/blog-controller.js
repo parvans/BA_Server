@@ -1,5 +1,6 @@
 import { Blog } from "../models/Blog.js";
 import { User } from "../models/User.js";
+import cloudNary from "../utils/cloudinary.js";
    
 export const getallBlogs = async (req, res) => {
     let blogs;
@@ -17,9 +18,11 @@ export const getallBlogs = async (req, res) => {
 
 export const addBlog = async (req, res, next) => {
     const {title,description}=req.body
+    const image=req.body.data
     const userId=req.user.id
     let existingUser;
     try{
+        
         existingUser=await User.findById({_id:userId})
         
     }catch(err){
@@ -34,9 +37,14 @@ export const addBlog = async (req, res, next) => {
     if(exBlog){
         return res.status(400).json({message:"Blog with this title already exists"})
     }
+    const uploadResponse = await cloudNary.uploader.
+            upload(image,{
+                upload_preset: 'blog_images'
+            })
     const newBlog=new Blog({
         title:theTitle,
         description:theDesc,
+        image:uploadResponse.public_id,
         userId
     })
     try{
@@ -100,6 +108,8 @@ export const deleteBlog = async (req, res) => {
             return res.status(404).json({message:'No Blog Found'})
         }else{
             await Blog.findByIdAndDelete(blogId)
+            await cloudNary.uploader.destroy(blog.image)
+
             return res.status(200).json({message:'Blog Successfully Deleted'})
         }
     }catch(err){

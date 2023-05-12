@@ -4,6 +4,8 @@ import { User } from "../models/User.js";
 import Jwt from "jsonwebtoken";
 import cloudNary from "../utils/cloudinary.js";
 import dotenv from "dotenv";
+import { nanoid } from "nanoid";
+import nodemailer from "nodemailer";
 dotenv.config();
 
 export const getallUsers = async (req, res) => {
@@ -85,7 +87,12 @@ export const verifyEmail = async (req, res) => {
             // gelerate code
             const otpCode = nanoid(5).toUpperCase()
             // save to db
-            user.otpCode = otpCode
+            // if(user.otpCode){
+            user.otp = otpCode
+            // }else{
+            //     const us=await User.updateOne({email},{$set:{otpCode}})
+            //     us.otpCode=otpCode
+            // }
             await user.save()
 
             // send email by using nodemailer
@@ -117,10 +124,44 @@ export const verifyEmail = async (req, res) => {
                 }
             });
 
-            res.status(200).send('Email sent')
+            res.status(200).json({ message: "Email sent successfully" })
         } catch (error) {
-            return res.status(400).send(error)
+            return res.status(400).json({ message: error.message })
         }
     }
 
+}
+
+export const verifyCode = async (req, res) => {
+    const {email,otp} = req.body
+    let user=await User.findOne({email})
+    if(!user){
+        return res.status(400).json({message:"Invalid Email"})
+    }else{
+        try {
+            if(user.otp===otp){
+                return res.status(200).json({message:"OTP Verified"})
+            }else{
+                return res.status(400).json({message:"Invalid OTP"})
+            }
+        } catch (error) {
+            return res.status(400).json({message:error.message})
+        }
+    }
+}
+
+export const resetPassword = async (req, res) => {
+    const {email,password} = req.body
+    let user=await User.findOne({email})
+    if(!user){
+        return res.status(400).json({message:"Invalid Email"})
+    }else{
+        const saltRound = 10;
+        bcrypt.hash(password, saltRound, (err, hash) => {
+            user.password=hash
+            user.save()
+            return res.status(200).json({message:"Password Changed"})
+        })
+
+    }
 }
