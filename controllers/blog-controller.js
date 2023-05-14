@@ -88,7 +88,7 @@ export const getByid = async (req, res) => {
     const blogId=req.query.id
     let blog;
     try{
-        blog=await Blog.findById(blogId)
+        blog=await Blog.findById(blogId).populate({path:'userId',select:'name email'})
     }catch(err){
         console.log(err);
     }
