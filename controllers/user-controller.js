@@ -62,7 +62,7 @@ export const login = async (req, res) => {
         bcrypt.compare(password, foundUser.password, (err, result) => {
             if (result) {
                 try {
-                    const token = Jwt.sign({ id: foundUser._id }, process.env.JWT_SECRET, { expiresIn: '1d' })
+                    const token = Jwt.sign({ id: foundUser._id }, process.env.JWT_SECRET, { expiresIn: '6h' })
                     res.header("auth-token", token).json({ message: "login successfully", token: token });
                 } catch (error) {
                     return res.status(500).json({ message: error.message })
