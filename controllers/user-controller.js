@@ -165,3 +165,15 @@ export const resetPassword = async (req, res) => {
 
     }
 }
+
+export const getUserProfile = async (req, res) => {
+    try {
+        const user = await User.findById(req.user.id).select('-password')
+        if(!user){
+            return res.status(400).json({message:"User Not Found"})
+        }
+        return res.status(200).json({ data: user })
+    } catch (error) {
+        return res.status(500).json({ message: error.message })
+    }
+}
