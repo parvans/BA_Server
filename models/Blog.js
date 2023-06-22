@@ -20,11 +20,11 @@ export const Blog = mongoose.model(
       type: String,
       required: true,
     },
-    date:{
-      type:Date,
-      default:Date.now
-    },
-    user: userSchema
-  })
+    // date:{
+    //   type:Date,
+    //   default:Date.now
+    // },
+    userId: userSchema
+  },{timestamps:true})
 );
 
