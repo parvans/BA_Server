@@ -58,11 +58,12 @@ export const addBlog = async (req, res, next) => {
         const result=await newBlog.save()
         existingUser.blogs.push(result)
         await existingUser.save()
+
     }catch(err){
         console.log(err);
         return res.status(500).json({message:err})
     }
-    return res.status(200).json({newBlog})
+    return res.status(200).json({message:"Blog added successfully"})
 }
 
 export const updateBlog = async (req, res) => {
@@ -109,7 +110,7 @@ export const deleteBlog = async (req, res) => {
         }else{
             await Blog.findByIdAndDelete(blogId)
             await cloudNary.uploader.destroy(blog.image)
-
+            await User.findByIdAndUpdate(blog.userId,{$pull:{blogs:blogId}})
             return res.status(200).json({message:'Blog Successfully Deleted'})
         }
     }catch(err){
