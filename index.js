@@ -1,8 +1,8 @@
 import express from "express";
 import cors from "cors";
 import bodyParser from "body-parser";
-import users from "./routes/user-routes.js";
-import blogs from "./routes/blog-routes.js";
+import users from "./routes/user.routes.js";
+import blogs from "./routes/blog.routes.js";
 import dataBase from "./config/db.js";
 const app = express();
 
