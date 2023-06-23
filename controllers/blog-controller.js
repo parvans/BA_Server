@@ -45,13 +45,6 @@ export const addBlog = async (req, res, next) => {
         userId
     })
     try{
-        // const session=await mongoose.startSession()
-        // session.startTransaction();
-        // await newBlog.save({session})
-        // existingUser.blogs.push(newBlog)
-        // await r.save({session})
-        // await session.commitTransaction()
-
         const result=await newBlog.save()
         existingUser.blogs.push(result)
         await existingUser.save()
@@ -66,19 +59,19 @@ export const addBlog = async (req, res, next) => {
 export const updateBlog = async (req, res) => {
     const {title,description}=req.body
     const blogId=req.query.id
-        let blog
-        try{
-            blog=await Blog.findByIdAndUpdate(blogId,{
+        try {
+        const blogExist=await Blog.findById(blogId)
+        if(!blogExist){
+            return res.status(404).json({message:"No Blog Found"})
+        }
+            await Blog.findByIdAndUpdate(blogId,{
                 title,
                 description
-            })
-        }catch(err){
-            return console.log(err);
+            },{new:true})
+            res.status(200).json({message:"Blog updated successfully"})
+        } catch (error) {
+            console.log(error);
         }
-        if(!blog){
-            return res.status(500).json({message:"Unable to update the blog"})
-        }
-        res.status(200).json({message:"Blog updated successfully"})
 
 }
 
