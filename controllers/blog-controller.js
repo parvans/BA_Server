@@ -37,10 +37,7 @@ export const addBlog = async (req, res, next) => {
     if(exBlog){
         return res.status(400).json({message:"Blog with this title already exists"})
     }
-    const uploadResponse = await cloudNary.uploader.
-            upload(image,{
-                upload_preset: 'blog_images'
-            })
+    const uploadResponse = await cloudNary.uploader.upload(image,{upload_preset: 'blog_images'})
     const newBlog=new Blog({
         title:theTitle,
         description:theDesc,
@@ -81,7 +78,7 @@ export const updateBlog = async (req, res) => {
         if(!blog){
             return res.status(500).json({message:"Unable to update the blog"})
         }
-        return res.status(200).json({message:"Blog updated successfully"})
+        res.status(200).json({message:"Blog updated successfully"})
 
 }
 
