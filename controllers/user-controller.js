@@ -81,7 +81,7 @@ export const verifyEmail = async (req, res) => {
     const { email } = req.body
     let user = await User.findOne({ email })
     if (!user) {
-        return res.status(400).send('Invalid email')
+        return res.status(400).json({ message: "User with this email does not exist" })
     } else {
         try {
             // gelerate code
