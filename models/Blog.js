@@ -5,6 +5,12 @@ const userSchema = {
   ref: "User",
   required:true
 };
+
+const commentSchema = {
+  type: mongoose.Schema.Types.ObjectId,
+  ref: "Comment",
+  required:true
+};
 export const Blog = mongoose.model(
   "Blog",
   new mongoose.Schema({
@@ -24,7 +30,9 @@ export const Blog = mongoose.model(
     //   type:Date,
     //   default:Date.now
     // },
-    userId: userSchema
+    userId: userSchema,
+    likes: [userSchema],
+    comments:[commentSchema],
   },{timestamps:true})
 );
 
