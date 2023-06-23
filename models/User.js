@@ -6,6 +6,12 @@ const blogSchema = {
   required: true
 };
 
+const userSchema = {
+  type: mongoose.Types.ObjectId,
+  ref: "User",
+  required: true
+};
+
 export const User = mongoose.model(
   "User",
   new mongoose.Schema({
@@ -30,7 +36,9 @@ export const User = mongoose.model(
     otp: {
       type: String,
     },
-    blogs:[blogSchema]
+    blogs:[blogSchema],
+    following:[userSchema],
+    followers:[userSchema],
   },{
     timestamps:true
   })
