@@ -1,4 +1,5 @@
 import { Blog } from "../models/Blog.js";
+import { Draft } from "../models/Draft.js";
 import { User } from "../models/User.js";
 import cloudNary from "../utils/cloudinary.js";
    
@@ -31,7 +32,7 @@ export const addBlog = async (req, res, next) => {
     if(!existingUser){
         return res.status(400).json({message:"Unable to find the user with this id"})
     }
-    const theDesc=description.split(' ').map((item) => item.charAt(0).toUpperCase() + item.slice(1).toLowerCase()).join(" ");
+    // const theDesc=description.split(' ').map((item) => item.charAt(0).toUpperCase() + item.slice(1).toLowerCase()).join(" ");
     const theTitle=title.split(' ').map((item) => item.charAt(0).toUpperCase() + item.slice(1).toLowerCase()).join(" ");
     const exBlog=await Blog.findOne({title:theTitle})
     if(exBlog){
@@ -40,7 +41,7 @@ export const addBlog = async (req, res, next) => {
     const uploadResponse = await cloudNary.uploader.upload(image,{upload_preset: 'blog_images'})
     const newBlog=new Blog({
         title:theTitle,
-        description:theDesc,
+        description:description,
         image:uploadResponse.public_id,
         userId
     })
@@ -120,5 +121,42 @@ export const usersBlogs = async (req, res) => {
         return res.status(404).json({message:"No Blogs Found"})
     }
     return res.status(200).json({data:userBlogs.blogs.reverse()})
+}
+
+export const saveToDraft=async(req,res)=>{
+    const {title,description}=req.body
+    const image=req.body.data
+    const userId=req.user.id
+    let existingUser;
+    try{
+        
+        existingUser=await User.findById({_id:userId})
+        
+    }catch(err){
+        return console.log(err);
+    }
+    if(!existingUser){
+        return res.status(400).json({message:"Unable to find the user with this id"})
+    }
+    // const theDesc=description.split(' ').map((item) => item.charAt(0).toUpperCase() + item.slice(1).toLowerCase()).join(" ");
+    const theTitle=title.split(' ').map((item) => item.charAt(0).toUpperCase() + item.slice(1).toLowerCase()).join(" ");
+    const exDraft=await Draft.findOne({title:theTitle})
+    if(exDraft){
+        return res.status(400).json({message:"Blog with this title already exists in the draft"})
+    }
+    const uploadResponse = await cloudNary.uploader.upload(image,{upload_preset: 'blog_images'})
+    const newDraft=new Draft({
+        title:theTitle,
+        description:description,
+        image:uploadResponse.public_id,
+        userId
+    })
+    try{
+        await newBlog.save()
+    }catch(err){
+        console.log(err);
+        return res.status(500).json({message:err})
+    }
+    return res.status(200).json({message:"Blog added to Draft successfully"})
 }
 
