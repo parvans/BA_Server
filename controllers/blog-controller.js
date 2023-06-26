@@ -160,3 +160,34 @@ export const saveToDraft=async(req,res)=>{
     return res.status(200).json({message:"Blog added to Draft successfully"})
 }
 
+export const getDrafts=async(req,res)=>{
+    const userId=req.user.id
+    let drafts;
+    try{
+        drafts=await Draft.find({userId})
+    }catch(err){
+        return console.log(err);
+    }
+    if(!drafts){
+        return res.status(404).json({message:"No Drafts Found"})
+    }
+    return res.status(200).json({data:drafts})
+}
+
+export const deleteDraft=async(req,res)=>{
+    const draftId=req.query.id
+    let draft;
+    try{
+        draft=await Draft.findById(draftId)
+        if(!draft){
+            return res.status(404).json({message:'No Draft Found'})
+        }else{
+            await Draft.findByIdAndDelete(draftId)
+            await cloudNary.uploader.destroy(draft.image)
+            return res.status(200).json({message:'Draft Successfully Deleted'})
+        }
+    }catch(err){
+        console.log(err);
+    }
+}
+
