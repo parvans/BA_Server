@@ -47,7 +47,7 @@ export const addBlog = async (req, res, next) => {
     })
     try{
         const result=await newBlog.save()
-        existingUser.blogs.push(result)
+        existingUser.blogs.push(result._id)
         await existingUser.save()
 
     }catch(err){
@@ -191,3 +191,58 @@ export const deleteDraft=async(req,res)=>{
     }
 }
 
+export const getADraft=async(req,res)=>{
+    const draftId=req.query.id
+    let draft;
+    try {
+        draft=await Draft.findById(draftId)
+    } catch (error) {
+        console.log(error);
+    }
+    if(!draft){
+        return res.status(404).json({message:"No Draft Found"})
+    }else{
+        return res.status(200).json({data:draft})
+    }
+}
+export const updateDraft=async(req,res)=>{
+    const {title,description}=req.body
+    const draftId=req.query.id
+    try {
+    const draftExist=await Draft.findById(draftId)
+    if(!draftExist){
+        return res.status(404).json({message:"No Draft Found"})
+    }
+    await Draft.findByIdAndUpdate(draftId,{
+        title,
+        description
+    },{new:true})
+    res.status(200).json({message:"Draft updated successfully"})
+    } catch (error) {
+        console.log(error);
+    }
+}
+
+export const publishDraft=async(req,res)=>{
+    const draftId=req.query.id
+    let draft;
+    try {
+        draft=await Draft.findById(draftId)
+        if(!draft){
+            return res.status(404).json({message:"No Draft Found"})
+        }
+        const newBlog=new Blog({
+            title:draft.title,
+            description:draft.description,
+            image:draft.image,
+            userId:draft.userId
+        })
+        const result=await newBlog.save()
+        const theUser=await User.findById(draft.userId)
+        theUser.blogs.push(result._id)
+        await Draft.findByIdAndDelete(draftId)
+
+    } catch (error) {
+        console.log(error);
+    }
+}
