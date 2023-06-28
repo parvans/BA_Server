@@ -6,13 +6,8 @@ const userSchema = {
   required:true
 };
 
-const commentSchema = {
-  type: mongoose.Schema.Types.ObjectId,
-  ref: "Comment",
-  required:true
-};
-export const Blog = mongoose.model(
-  "Blog",
+export const Draft = mongoose.model(
+  "Draft",
   new mongoose.Schema({
     title: {
       type: String,
@@ -26,13 +21,7 @@ export const Blog = mongoose.model(
       type: String,
       required: true,
     },
-    // date:{
-    //   type:Date,
-    //   default:Date.now
-    // },
     userId: userSchema,
-    likes: [userSchema],
-    comments:[commentSchema],
   },{timestamps:true})
 );
 

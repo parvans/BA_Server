@@ -4,7 +4,7 @@ dotenv.config()
 const dataBase = () => {
     try {
     // mongoose.set('strictQuery', false);  
-        mongoose.connect(process.env.MONGODB_URI)
+        mongoose.connect(process.env.MONGODB_URI_CLOUD)
             .then(() => console.log("Connected to MongoDB 🫙"))
             .catch((err) => console.error(err));
     } catch (error) {

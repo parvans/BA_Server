@@ -1,4 +1,5 @@
 import { Blog } from "../models/Blog.js";
+import { Draft } from "../models/Draft.js";
 import { User } from "../models/User.js";
 import cloudNary from "../utils/cloudinary.js";
    
@@ -31,32 +32,22 @@ export const addBlog = async (req, res, next) => {
     if(!existingUser){
         return res.status(400).json({message:"Unable to find the user with this id"})
     }
-    const theDesc=description.split(' ').map((item) => item.charAt(0).toUpperCase() + item.slice(1).toLowerCase()).join(" ");
+    // const theDesc=description.split(' ').map((item) => item.charAt(0).toUpperCase() + item.slice(1).toLowerCase()).join(" ");
     const theTitle=title.split(' ').map((item) => item.charAt(0).toUpperCase() + item.slice(1).toLowerCase()).join(" ");
     const exBlog=await Blog.findOne({title:theTitle})
     if(exBlog){
         return res.status(400).json({message:"Blog with this title already exists"})
     }
-    const uploadResponse = await cloudNary.uploader.
-            upload(image,{
-                upload_preset: 'blog_images'
-            })
+    const uploadResponse = await cloudNary.uploader.upload(image,{upload_preset: 'blog_images'})
     const newBlog=new Blog({
         title:theTitle,
-        description:theDesc,
+        description:description,
         image:uploadResponse.public_id,
         userId
     })
     try{
-        // const session=await mongoose.startSession()
-        // session.startTransaction();
-        // await newBlog.save({session})
-        // existingUser.blogs.push(newBlog)
-        // await r.save({session})
-        // await session.commitTransaction()
-
         const result=await newBlog.save()
-        existingUser.blogs.push(result)
+        existingUser.blogs.push(result._id)
         await existingUser.save()
 
     }catch(err){
@@ -69,19 +60,19 @@ export const addBlog = async (req, res, next) => {
 export const updateBlog = async (req, res) => {
     const {title,description}=req.body
     const blogId=req.query.id
-        let blog
-        try{
-            blog=await Blog.findByIdAndUpdate(blogId,{
+        try {
+        const blogExist=await Blog.findById(blogId)
+        if(!blogExist){
+            return res.status(404).json({message:"No Blog Found"})
+        }
+            await Blog.findByIdAndUpdate(blogId,{
                 title,
                 description
-            })
-        }catch(err){
-            return console.log(err);
+            },{new:true})
+            res.status(200).json({message:"Blog updated successfully"})
+        } catch (error) {
+            console.log(error);
         }
-        if(!blog){
-            return res.status(500).json({message:"Unable to update the blog"})
-        }
-        return res.status(200).json({message:"Blog updated successfully"})
 
 }
 
@@ -132,3 +123,126 @@ export const usersBlogs = async (req, res) => {
     return res.status(200).json({data:userBlogs.blogs.reverse()})
 }
 
+export const saveToDraft=async(req,res)=>{
+    const {title,description}=req.body
+    const image=req.body.data
+    const userId=req.user.id
+    let existingUser;
+    try{
+        
+        existingUser=await User.findById({_id:userId})
+        
+    }catch(err){
+        return console.log(err);
+    }
+    if(!existingUser){
+        return res.status(400).json({message:"Unable to find the user with this id"})
+    }
+    // const theDesc=description.split(' ').map((item) => item.charAt(0).toUpperCase() + item.slice(1).toLowerCase()).join(" ");
+    const theTitle=title.split(' ').map((item) => item.charAt(0).toUpperCase() + item.slice(1).toLowerCase()).join(" ");
+    const exDraft=await Draft.findOne({title:theTitle})
+    if(exDraft){
+        return res.status(400).json({message:"Blog with this title already exists in the draft"})
+    }
+    const uploadResponse = await cloudNary.uploader.upload(image,{upload_preset: 'blog_images'})
+    const newDraft=new Draft({
+        title:theTitle,
+        description:description,
+        image:uploadResponse.public_id,
+        userId
+    })
+    try{
+        await newBlog.save()
+    }catch(err){
+        console.log(err);
+        return res.status(500).json({message:err})
+    }
+    return res.status(200).json({message:"Blog added to Draft successfully"})
+}
+
+export const getDrafts=async(req,res)=>{
+    const userId=req.user.id
+    let drafts;
+    try{
+        drafts=await Draft.find({userId})
+    }catch(err){
+        return console.log(err);
+    }
+    if(!drafts){
+        return res.status(404).json({message:"No Drafts Found"})
+    }
+    return res.status(200).json({data:drafts})
+}
+
+export const deleteDraft=async(req,res)=>{
+    const draftId=req.query.id
+    let draft;
+    try{
+        draft=await Draft.findById(draftId)
+        if(!draft){
+            return res.status(404).json({message:'No Draft Found'})
+        }else{
+            await Draft.findByIdAndDelete(draftId)
+            await cloudNary.uploader.destroy(draft.image)
+            return res.status(200).json({message:'Draft Successfully Deleted'})
+        }
+    }catch(err){
+        console.log(err);
+    }
+}
+
+export const getADraft=async(req,res)=>{
+    const draftId=req.query.id
+    let draft;
+    try {
+        draft=await Draft.findById(draftId)
+    } catch (error) {
+        console.log(error);
+    }
+    if(!draft){
+        return res.status(404).json({message:"No Draft Found"})
+    }else{
+        return res.status(200).json({data:draft})
+    }
+}
+export const updateDraft=async(req,res)=>{
+    const {title,description}=req.body
+    const draftId=req.query.id
+    try {
+    const draftExist=await Draft.findById(draftId)
+    if(!draftExist){
+        return res.status(404).json({message:"No Draft Found"})
+    }
+    await Draft.findByIdAndUpdate(draftId,{
+        title,
+        description
+    },{new:true})
+    res.status(200).json({message:"Draft updated successfully"})
+    } catch (error) {
+        console.log(error);
+    }
+}
+
+export const publishDraft=async(req,res)=>{
+    const draftId=req.query.id
+    let draft;
+    try {
+        draft=await Draft.findById(draftId)
+        if(!draft){
+            return res.status(404).json({message:"No Draft Found"})
+        }
+        const newBlog=new Blog({
+            title:draft.title,
+            description:draft.description,
+            image:draft.image,
+            userId:draft.userId
+        })
+        const result=await newBlog.save()
+        const theUser=await User.findById(draft.userId)
+        theUser.blogs.push(result._id)
+        await Draft.findByIdAndDelete(draftId)
+
+    } catch (error) {
+        console.log(error);
+    }
+}
