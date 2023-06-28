@@ -6,7 +6,8 @@ import cloudNary from "../utils/cloudinary.js";
 export const getallBlogs = async (req, res) => {
     let blogs;
     try {
-        blogs = await Blog.find().populate("userId").populate("userId").sort({ createdAt: -1 });
+        blogs = await Blog.find({ isDraft: false, isTrash: false })
+        .populate("userId").populate("userId").sort({ createdAt: -1 });
     } catch (err) {
         console.log(err);
     }
@@ -113,7 +114,7 @@ export const usersBlogs = async (req, res) => {
     const userId=req.user.id
     let userBlogs;
     try{
-        userBlogs=await User.findById(userId).select('blogs').populate('blogs')
+        userBlogs=await User.findById({_id:userId, isDraft: false, isTrash: false }).select('blogs').populate('blogs').sort({createdAt:-1})
     }catch(err){
         return console.log(err);
     }

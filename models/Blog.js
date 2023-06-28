@@ -26,10 +26,14 @@ export const Blog = mongoose.model(
       type: String,
       required: true,
     },
-    // date:{
-    //   type:Date,
-    //   default:Date.now
-    // },
+    isDraft:{
+      type:Boolean,
+      default:false
+    },
+    isTrash:{
+      type:Boolean,
+      default:false
+    },
     userId: userSchema,
     likes: [userSchema],
     comments:[commentSchema],
