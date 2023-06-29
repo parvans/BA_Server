@@ -1,8 +1,7 @@
 //import { json } from "body-parser";
-import bcrypt, { hash } from "bcrypt";
+import bcrypt from "bcrypt";
 import { User } from "../models/User.js";
 import Jwt from "jsonwebtoken";
-import cloudNary from "../utils/cloudinary.js";
 import dotenv from "dotenv";
 import { nanoid } from "nanoid";
 import nodemailer from "nodemailer";
