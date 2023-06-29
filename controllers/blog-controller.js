@@ -90,17 +90,14 @@ export const addBlog = async (req, res, next) => {
 }
 
 export const updateBlog = async (req, res) => {
-    const {title,description}=req.body
+    // const {title,description}=req.body
     const blogId=req.query.id
         try {
         const blogExist=await Blog.findById(blogId)
         if(!blogExist){
             return res.status(404).json({message:"No Blog Found"})
         }
-            await Blog.findByIdAndUpdate(blogId,{
-                title,
-                description
-            },{new:true})
+            await Blog.findByIdAndUpdate(blogId,req.body,{new:true})
             res.status(200).json({message:"Blog updated successfully"})
         } catch (error) {
             console.log(error);
