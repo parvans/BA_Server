@@ -178,3 +178,20 @@ export const getUserProfile = async (req, res) => {
     }
 }
 
+export const getOtherUsers = async (req, res) => {
+    const keyword = req.query.search
+    ? {
+        $or: [
+            { name: { $regex: req.query.search, $options: 'i' } },
+            { email: { $regex: req.query.search, $options: 'i' } },
+        ]
+    }: {};
+
+    try {
+        const findUser = await User.find(keyword).find({ _id: { $ne: req.user.id } }).select('-password')
+        res.status(200).json({ data: findUser })
+    } catch (error) {
+        res.status(500).json({message:error.message})
+    }
+}
+
