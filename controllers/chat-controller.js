@@ -33,3 +33,54 @@ export const accessthechat = async (req, res) => {
             }
         }
 }
+
+export const fetchChat = async (req, res) => {
+    try {
+        Chat.find({users:{$elemMatch:{$eq:req.user.id}}})
+        .populate('users','-password')
+        .populate('groupAdmin','-password')
+        .populate('latestMessage').sort({updatedAt:-1})
+        .then(async(result)=>{
+            result=await User.populate(result,{
+                path:'latestMessage.sender',
+                select:'name email',
+
+            })
+            res.status(200).json({data:result})
+        })
+    } catch (error) {
+        res.status(500).json({message:error.message})
+    }
+}
+
+export const createGroupChat=async(req,res)=>{
+    const {users,name}=req.body
+
+    if(!users||!name) {
+        return res.status(400).json({message:'Please Fill All Fields'})
+    } 
+    var theUsers=JSON.parse(users)
+    if(theUsers.length<=2){
+        return res.status(400).json({message:'More than 2 users are required for a group chat'})
+    }
+
+    theUsers.push(req.user.id)
+
+    try {
+        const groupChat=await Chat.create({
+            chatName:name,
+            users:theUsers,
+            isGroupChat:true,
+            groupAdmin:req.user.id, 
+        })
+
+        const fullGroupChat=await Chat.findOne({_id:groupChat._id}).
+        populate('users','-password').
+        populate('groupAdmin','-password') 
+
+        res.status(201).json({data:fullGroupChat})
+    } catch (error) {
+        return res.status(500).json({message:error})
+    }
+
+}
