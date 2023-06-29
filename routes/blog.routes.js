@@ -1,19 +1,30 @@
-import express from 'express'
-import { addBlog, deleteBlog, deleteDraft, getADraft, getallBlogs, getByid, getDrafts, publishDraft, saveToDraft, updateBlog, updateDraft, usersBlogs } from '../controllers/blog-controller.js'
-import auth from '../middleware/auth.js'
-const blogRouter=express.Router()
-blogRouter.get('/allblogs',auth,getallBlogs)
-blogRouter.post('/add',auth,addBlog)
-blogRouter.put('/updateblog',auth,updateBlog)
-blogRouter.get('/getablog',auth,getByid)
-blogRouter.delete('/deleteblog',auth,deleteBlog)
-blogRouter.get('/myblogs',auth,usersBlogs)
+import express from "express";
+import {
+  addBlog,
+  deleteBlog,
+  getallBlogs,
+  getByid,
+  getUserDraftBlogs,
+  getUserTrashBlogs,
+  moveToDraft,
+  moveToTrash,
+  updateBlog,
+  usersBlogs,
+} from "../controllers/blog-controller.js";
+import auth from "../middleware/auth.js";
+const blogRouter = express.Router();
+blogRouter.get("/allblogs", auth, getallBlogs);
+blogRouter.post("/add", auth, addBlog);
+blogRouter.put("/updateblog", auth, updateBlog);
+blogRouter.get("/getablog", auth, getByid);
+blogRouter.delete("/deleteblog", auth, deleteBlog);
+blogRouter.get("/myblogs", auth, usersBlogs);
 
-blogRouter.post('/savetodraft',auth,saveToDraft)
-blogRouter.get('/getdrafts',auth,getDrafts)
-blogRouter.get('/getadraft',auth,getADraft)
-blogRouter.put('/updatdraft',auth,updateDraft)
-blogRouter.delete('/deletedraft',auth,deleteDraft)
-blogRouter.post('/publishdraft',auth,publishDraft)
+blogRouter.put("/movetotrash", auth, moveToTrash);
+blogRouter.get("/mytrashblogs", auth, getUserTrashBlogs);
 
-export default blogRouter
+blogRouter.put("/movetodraft", auth, moveToDraft);
+blogRouter.get("/getuserdrafts", auth, getUserDraftBlogs);
+
+
+export default blogRouter;

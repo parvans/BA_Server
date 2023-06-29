@@ -3,6 +3,7 @@ import cors from "cors";
 import bodyParser from "body-parser";
 import users from "./routes/user.routes.js";
 import blogs from "./routes/blog.routes.js";
+import chat from "./routes/chat.routes.js";
 import dataBase from "./config/db.js";
 const app = express();
 
@@ -19,6 +20,7 @@ app.get("/", (req, res) => {
 
 app.use('/api/users', users)
 app.use('/api/blogs', blogs)
+app.use('/api/chat', chat)
 
 const port = process.env.PORT || 8000;
 app.listen(port, () => console.log(`Listening on port ${port} 🚀`));

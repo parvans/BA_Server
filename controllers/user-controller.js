@@ -1,8 +1,7 @@
 //import { json } from "body-parser";
-import bcrypt, { hash } from "bcrypt";
+import bcrypt from "bcrypt";
 import { User } from "../models/User.js";
 import Jwt from "jsonwebtoken";
-import cloudNary from "../utils/cloudinary.js";
 import dotenv from "dotenv";
 import { nanoid } from "nanoid";
 import nodemailer from "nodemailer";
@@ -175,6 +174,23 @@ export const getUserProfile = async (req, res) => {
         return res.status(200).json({ data: user })
     } catch (error) {
         return res.status(500).json({ message: error.message })
+    }
+}
+
+export const getOtherUsers = async (req, res) => {
+    const keyword = req.query.search
+    ? {
+        $or: [
+            { name: { $regex: req.query.search, $options: 'i' } },
+            { email: { $regex: req.query.search, $options: 'i' } },
+        ]
+    }: {};
+
+    try {
+        const findUser = await User.find(keyword).find({ _id: { $ne: req.user.id } }).select('-password')
+        return res.status(200).json({ data: findUser })
+    } catch (error) {
+        return res.status(500).json({message:error.message})
     }
 }
 
