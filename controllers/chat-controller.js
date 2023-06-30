@@ -84,3 +84,60 @@ export const createGroupChat=async(req,res)=>{
     }
 
 }
+
+export const renameGroup=async(req,res)=>{
+    const {chatId,chatName}=req.body
+    try {
+        const updateChat=await Chat.findByIdAndUpdate(chatId,{chatName},{new:true})
+        .populate('users','-password')
+        .populate('groupAdmin','-password')
+        if(!updateChat){
+            return res.status(404).json({message:'Chat Not Found'})
+        }else{
+            return res.status(200).json({data:updateChat})
+        }
+    } catch (error) {
+        return res.status(500).json({message:error})
+    }
+}
+
+export const groupAddMember=async(req,res)=>{
+    const {chatId,userId}=req.body
+    try {
+        const userExist=await Chat.findOne({_id:chatId,users:{$elemMatch:{$eq:userId}}})
+        if(userExist){
+            return res.status(400).json({message:'User Already Exist'})
+        }
+    
+        const add=await Chat.findByIdAndUpdate(chatId,{$push:{users:userId}},{new:true})
+        .populate('users','-password')
+        .populate('groupAdmin','-password')
+        if(!add){
+            return res.status(404).json({message:'Chat Not Found'})
+        }else{
+            return res.status(200).json({data:add})
+        }
+    } catch (error) {
+        return res.status(500).json({message:error})
+    }
+}
+
+export const groupRemoveMember=async(req,res)=>{
+    const {chatId,userId}=req.body
+    try {
+        const userExist=await Chat.findOne({_id:chatId,users:{$elemMatch:{$eq:userId}}})
+        if(!userExist){
+            return res.status(400).json({message:'User Not Exist'})
+        }
+        const remOve=await Chat.findByIdAndUpdate(chatId,{$pull:{users:userId}},{new:true})
+        .populate('users','-password')
+        .populate('groupAdmin','-password')
+        if(!remOve){
+            return res.status(404).json({message:'Chat Not Found'})
+        }else{
+            return res.status(200).json({data:remOve})
+        }
+    } catch (error) {
+        return res.status(500).json({message:error})   
+    }
+}
