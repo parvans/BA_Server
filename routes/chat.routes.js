@@ -3,7 +3,7 @@ import auth from '../middleware/auth.js';
 import { accessthechat, createGroupChat, fetchChat, groupAddMember, groupRemoveMember, renameGroup } from '../controllers/chat-controller.js';
 const router = express.Router();
 
-router.post('/acceschat',auth,accessthechat)
+router.post('/accesschat',auth,accessthechat)
 router.get('/fetchchat',auth,fetchChat)
 router.post('/creategroupchat',auth,createGroupChat)
 router.put('/renamegroup',auth,renameGroup)
