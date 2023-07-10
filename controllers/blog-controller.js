@@ -133,6 +133,7 @@ export const moveToTrash = async (req, res) => {
             return res.status(404).json({message:'No Blog Found'})
         }else{
             await Blog.findByIdAndUpdate(blogId,{isTrash:true,isDraft:false})
+            // await User.findByIdAndUpdate(blog.userId,{$pull:{blogs:blogId}})
             return res.status(200).json({message:'Blog Successfully Moved to Trash'})
         }
     } catch (error) {
@@ -149,6 +150,7 @@ export const moveToDraft=async(req,res)=>{
             return res.status(404).json({message:'No Blog Found'})
         }else{
             await Blog.findByIdAndUpdate(blogId,{isTrash:false,isDraft:true})
+            // await User.findByIdAndUpdate(blog.userId,{$pull:{blogs:blogId}})
             return res.status(200).json({message:'Blog Successfully Moved to Draft'})
         }
     } catch (error) {
@@ -178,7 +180,8 @@ export const getUserTrashBlogs = async (req, res) => {
     let blogs;
     let trashBlogs;
     try {
-        blogs = await User.findById({_id:userId,}).select('blogs').populate('blogs').sort({ createdAt: -1 });
+        blogs = await User.findById({_id:userId}).select('blogs').populate('blogs').sort({ createdAt: -1 });
+        // console.log(blogs);
         trashBlogs=blogs.blogs.filter((blog)=>blog.isTrash===true)
     } catch (err) {
         console.log(err);
