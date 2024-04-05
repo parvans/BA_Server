@@ -5,7 +5,7 @@ const dataBase = () => {
     try {
     // mongoose.set('strictQuery', false);  
         mongoose.connect(process.env.MONGODB_URI_CLOUD)
-            .then(() => console.log("Connected to MongoDB 🫙"))
+            .then(() => console.log("Connected to MongoDB Cloud Atlas 🚀"))
             .catch((err) => console.error(err));
     } catch (error) {
         console.log(error);
