@@ -71,7 +71,7 @@ export const login = async (req, res) => {
             }
         })
     } else {
-        return res.status(404).json({ message: 'Couldnt Find User By This Email' })
+        return res.status(404).json({ message: "Couldn't Find User By This Email" })
     }
 
 }
