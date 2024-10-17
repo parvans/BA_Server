@@ -36,9 +36,6 @@ export const User = mongoose.model(
     otp: {
       type: String,
     },
-    blogs:[blogSchema],
-    following:[userSchema],
-    followers:[userSchema],
   },{
     timestamps:true
   })

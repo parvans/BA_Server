@@ -1,10 +1,11 @@
-//import { json } from "body-parser";
 import bcrypt from "bcrypt";
 import { User } from "../models/User.js";
 import Jwt from "jsonwebtoken";
 import dotenv from "dotenv";
 import { nanoid } from "nanoid";
 import nodemailer from "nodemailer";
+import { firstNameSecondNameCapForReg, isEmail, isEmpty, isNull, ReE, ReS, too } from "../services/util.service.js";
+import HttpStatus from "http-status"
 dotenv.config();
 
 export const getallUsers = async (req, res) => {
@@ -17,62 +18,178 @@ export const getallUsers = async (req, res) => {
 }
 
 export const signup = async (req, res) => {
-    const { name, email, password, blogs } = req.body
-    const saltRound = 10;
-    const exUser = await User.findOne({ email })
-    try {
-        if (!name || !email || !password) {
-            return res.status(400).json({ message: 'Please Fill All Fields' })
-        } else if (!name) {
-            return res.status(400).json({ message: 'Please Enter Your Name' })
-        } else if (!email) {
-            return res.status(400).json({ message: 'Please Enter Your Email' })
-        } else if (!password) {
-            return res.status(400).json({ message: 'Please Enter Your Password' })
-        } else if (exUser) {
-            return res.status(400).json({ message: 'User Already Exist! Login Instead' })
-        } else {
-            const theName = name.split(' ')
-            const realName = theName.map((name) => name[0].toUpperCase() + name.slice(1).toLowerCase()).join(' ')
-            bcrypt.hash(password, saltRound, (err, hash) => {
-                const user = new User({
-                    name: realName,
-                    email: email.toLowerCase(),
-                    password: hash,
-                    blogs: []
-                })
-                user.save()
-                return res.status(202).json({ message: 'User Created' })
-            })
+    let err;
+    const body = req.body;
+    const validation = ["name", "email", "password"];
+
+    let inVaild = await validation.filter((x) => {
+        if (isNull(body[x])) {
+          return true;
         }
-    } catch (error) {
-        return res.status(500).json({ message: error.message })
+        return false;
+    });
+
+    
+
+    if (inVaild.length > 0) {
+        return ReE(
+          res,
+          { message: `Please enter vaild details ${inVaild}` },
+          HttpStatus.BAD_REQUEST
+        );
+    }
+    
+    if (String(body.name).trim().length < 3) {
+        return ReE(
+          res,
+          { message: "Please enter name with more than 3 characters!." },
+          HttpStatus.BAD_REQUEST
+        );
+    }
+
+    if (String(body.name).trim().length > 18) {
+        return ReE(
+          res,
+          { message: "Please enter name with maximum 18 characters!." },
+          HttpStatus.BAD_REQUEST
+        );
+    }
+
+    if (!(await isEmail(body.email))) {
+        return ReE(
+          res,
+          { message: "Please enter vaild email !." },
+          HttpStatus.BAD_REQUEST
+        );
+    }
+    
+    let checkUser;
+    [err,checkUser]=await too(User.findOne({email:body.email}));
+
+    if (err) {
+        return ReE(res, err, HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+
+    if(!isNull(checkUser)){
+        return ReE(res,{ message: "Email id already taken!." },HttpStatus.BAD_REQUEST);
+    }
+
+    if (String(body.password).trim().length < 3) {
+        return ReE(
+          res,
+          { message: "Please enter password with more the 3 characters!." },
+          HttpStatus.BAD_REQUEST
+        );
+    }
+
+    if (String(body.password).trim().length > 18) {
+        return ReE(
+          res,
+          { message: "Please enter password with maximum 18 characters!." },
+          HttpStatus.BAD_REQUEST
+        );
+    }
+    let hashPassword;
+    [err, hashPassword] = await too(bcrypt.hash(body.password, bcrypt.genSaltSync(10)));
+
+    if (err) {
+        return ReE(res, err, HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+
+    if (isNull(hashPassword)) {
+        return ReE(
+        res,
+        { message: "Something went wrong with password!." },
+        HttpStatus.BAD_REQUEST
+        );
+    }
+
+    const createUser=new User({
+        name:firstNameSecondNameCapForReg(body.name),
+        email:body.email,
+        password:hashPassword
+    }).save();
+
+    if (!isNull(createUser)) {
+        return ReS(res,{ message: "User Register Successfully"},HttpStatus.OK);
     }
 }
 
 export const login = async (req, res) => {
-    const { email, password } = req.body
-    let foundUser = await User.findOne({ email: email.toLowerCase() })
-    if (!email) {
-        return res.status(400).json({ message: 'Please Enter Your Email' })
-    } else if (!password) {
-        return res.status(400).json({ message: 'Please Enter Your Password' })
-    } else if (foundUser) {
-        bcrypt.compare(password, foundUser.password, (err, result) => {
-            if (result) {
-                try {
-                    const token = Jwt.sign({ id: foundUser._id }, process.env.JWT_SECRET, { expiresIn: '6h' })
-                    res.header("auth-token", token).json({ message: "login successfully", token: token });
-                } catch (error) {
-                    return res.status(500).json({ message: error.message })
-                }
-            } else {
-                return res.status(404).json({ message: 'Incorrect Password' })
-            }
-        })
-    } else {
-        return res.status(404).json({ message: "Couldn't Find User By This Email" })
+    let err;
+    const body=req.body;
+    const fields = ["email", "password"];
+    
+    let inVaildFields = fields.filter(x => isNull(body[x]));
+
+    if(!isEmpty(inVaildFields)){
+        return ReE(res,{ message: `Please enter required fields ${inVaildFields}!.` }, HttpStatus.BAD_REQUEST);
     }
+    body.email = String(body.email).toLowerCase();
+    const {email,password} = body;
+
+
+    let checkUser;
+    [err,checkUser]=await too(User.findOne({email:email}));
+
+    if (err) {
+        return ReE(res, err, HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+    
+    if (isNull(checkUser)) {
+        return ReE(
+            res,
+            { message: "User does not exit." },
+            HttpStatus.BAD_REQUEST
+        );
+    }
+
+    let checkPassword;
+    [err, checkPassword] = await too(bcrypt.compare(password,checkUser.password));
+
+    if (err) {
+        return ReE(res, err, HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+
+    if (!checkPassword) {
+        return ReE(
+          res,
+          { message: "Please check your user name and password!." },
+          HttpStatus.BAD_REQUEST
+        );
+    }
+
+    let token = Jwt.sign({id:checkUser._id},process.env.JWT_SECRET,{expiresIn:'6h'});
+
+    if(isNull(token)){
+        return ReE(res, { message: "Something went wrong to genrate token!." }, HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+
+    return ReS(res, { message: `Welcome ${checkUser.name}`, token: token }, HttpStatus.OK);
+
+
+
+    // let foundUser = await User.findOne({ email: email.toLowerCase() })
+    // if (!email) {
+    //     return res.status(400).json({ message: 'Please Enter Your Email' })
+    // } else if (!password) {
+    //     return res.status(400).json({ message: 'Please Enter Your Password' })
+    // } else if (foundUser) {
+    //     bcrypt.compare(password, foundUser.password, (err, result) => {
+    //         if (result) {
+    //             try {
+    //                 const token = Jwt.sign({ id: foundUser._id }, process.env.JWT_SECRET, { expiresIn: '6h' })
+    //                 res.header("auth-token", token).json({ message: "login successfully", token: token });
+    //             } catch (error) {
+    //                 return res.status(500).json({ message: error.message })
+    //             }
+    //         } else {
+    //             return res.status(404).json({ message: 'Incorrect Password' })
+    //         }
+    //     })
+    // } else {
+    //     return res.status(404).json({ message: "Couldn't Find User By This Email" })
+    // }
 
 }
 
