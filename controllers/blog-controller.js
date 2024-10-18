@@ -6,17 +6,27 @@ import HttpStatus from "http-status"
 
 
 export const getallBlogs = async (req, res) => {
+    let err;
     let blogs;
-    try {
-        blogs = await Blog.find().populate("author").sort({ createdAt: -1 });
-    } catch (err) {
-        console.log(err);
+    [err,blogs]= await too(Blog.find({}).populate("author").sort({ createdAt: -1 }));
+
+    if (err) {
+        return ReE(res, err, HttpStatus.INTERNAL_SERVER_ERROR);
     }
-    if (!blogs) {
-        return res.status(404).json({ message: "No Blogs Found" });
-    } else {
-        return res.status(200).json({ data: blogs });
+
+    if(!isEmpty(blogs)){
+        return ReS(res,{ message: "All Blogs",data:blogs},HttpStatus.OK);
     }
+    // try {
+    //     blogs = await Blog.find().populate("author").sort({ createdAt: -1 });
+    // } catch (err) {
+    //     console.log(err);
+    // }
+    // if (!blogs) {
+    //     return res.status(404).json({ message: "No Blogs Found" });
+    // } else {
+    //     return res.status(200).json({ data: blogs });
+    // }
 }
 export const usersBlogs = async (req, res) => {
     const userId=req.user.id
@@ -84,10 +94,7 @@ export const addBlog = async (req, res) => {
     if (err) {
         return ReE(res, err, HttpStatus.INTERNAL_SERVER_ERROR);
     }
-
-    console.log(existBlog);
     
-
     if(!isNull(existBlog)){
         return ReE(res,{message:"The title is already taken"},HttpStatus.BAD_REQUEST);
     }
