@@ -18,7 +18,11 @@ export const Blog = mongoose.model(
       type: String,
       required: true,
     },
-    description: {
+    summary:{
+      type:String,
+      required:true
+    },
+    content: {
       type: String,
       required: true,
     },
@@ -26,17 +30,15 @@ export const Blog = mongoose.model(
       type: String,
       required: true,
     },
-    isDraft:{
-      type:Boolean,
-      default:false
-    },
-    isTrash:{
-      type:Boolean,
-      default:false
-    },
-    userId: userSchema,
-    likes: [userSchema],
-    comments:[commentSchema],
+    author: userSchema,
+    // isDraft:{
+    //   type:Boolean,
+    //   default:false
+    // },
+    // isTrash:{
+    //   type:Boolean,
+    //   default:false
+    // },
   },{timestamps:true})
 );
 

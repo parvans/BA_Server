@@ -1,12 +1,14 @@
 import { Blog } from "../models/Blog.js";
 import { User } from "../models/User.js";
+import { firstNameSecondNameCapForReg, isEmpty, isNull, ReE, ReS, too, uppperEveryWord } from "../services/util.service.js";
 import cloudNary from "../utils/cloudinary.js";
+import HttpStatus from "http-status"
+
 
 export const getallBlogs = async (req, res) => {
     let blogs;
     try {
-        blogs = await Blog.find({ isDraft: false, isTrash: false })
-        .populate("userId").populate("userId").sort({ createdAt: -1 });
+        blogs = await Blog.find().populate("author").sort({ createdAt: -1 });
     } catch (err) {
         console.log(err);
     }
@@ -46,47 +48,102 @@ export const getByid = async (req, res) => {
     }
 }
 
+export const addBlog = async (req, res) => {
 
-
-
-
-export const addBlog = async (req, res, next) => {
-    const {title,description,isDraft}=req.body
-    const image=req.body.data
+    let err;
+    const body=req.body;
+    const fields = ["title", "summary","content"];
+    const image=req.body.data;
     const userId=req.user.id
-    let existingUser;
-    try{
-        existingUser=await User.findById({_id:userId})
-        if(!existingUser){
-            return res.status(400).json({message:"Unable to find the user with this id"})
-        }
-    }catch(err){
-        return console.log(err);
-    }
-    // const theDesc=description.split(' ').map((item) => item.charAt(0).toUpperCase() + item.slice(1).toLowerCase()).join(" ");
-    const theTitle=title.split(' ').map((item) => item.charAt(0).toUpperCase() + item.slice(1).toLowerCase()).join(" ");
-    const exBlog=await Blog.findOne({title:theTitle})
-    if(exBlog){
-        return res.status(400).json({message:"Blog with this title already exists"})
-    }
-    const uploadResponse = await cloudNary.uploader.upload(image,{upload_preset: 'blog_images'})
-    const newBlog=new Blog({
-        title:theTitle,
-        description:description,
-        image:uploadResponse.public_id,
-        isDraft,
-        userId
-    })
-    try{
-        const result=await newBlog.save()
-        existingUser.blogs.push(result._id)
-        await existingUser.save()
 
-    }catch(err){
-        console.log(err);
-        return res.status(500).json({message:err})
+    let inVaildFields = fields.filter(x => isNull(body[x]));
+
+    if(!isEmpty(inVaildFields)){
+        return ReE(res,{ message: `Please enter required fields ${inVaildFields}!.` }, HttpStatus.BAD_REQUEST);
     }
-    return res.status(200).json({message:"Blog added successfully"})
+
+    const {title,summary,content}=body;
+
+    let checkUser;
+    [err,checkUser]=await too(User.findById(userId));
+
+    if (err) {
+        return ReE(res, err, HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+    
+    if (isNull(checkUser)) {
+        return ReE(res,{ message: "User does not exit." },HttpStatus.BAD_REQUEST);
+    }
+
+    const perfectTitle=uppperEveryWord(title);
+
+    let existBlog;
+    [err,existBlog]=await too(Blog.findOne({$or:[{title:title},{title:perfectTitle}]}))
+
+
+    if (err) {
+        return ReE(res, err, HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+
+    console.log(existBlog);
+    
+
+    if(!isNull(existBlog)){
+        return ReE(res,{message:"The title is already taken"},HttpStatus.BAD_REQUEST);
+    }
+
+    const uploadResponse = await cloudNary.uploader.upload(image,{upload_preset: 'blog_images'})
+
+    const createBlog=new Blog({
+        title:perfectTitle,
+        summary:summary,
+        content:content,
+        image:uploadResponse.url,
+        author:userId
+    }).save();
+
+    if (!isNull(createBlog)) {
+        return ReS(res,{ message: "Blog added Successfully"},HttpStatus.OK);
+    }
+
+
+
+
+
+    // // const image=req.body.data
+    // let existingUser;
+    // try{
+    //     existingUser=await User.findById({_id:userId})
+    //     if(!existingUser){
+    //         return res.status(400).json({message:"Unable to find the user with this id"})
+    //     }
+    // }catch(err){
+    //     return console.log(err);
+    // }
+    // // const theDesc=description.split(' ').map((item) => item.charAt(0).toUpperCase() + item.slice(1).toLowerCase()).join(" ");
+    // const theTitle=title.split(' ').map((item) => item.charAt(0).toUpperCase() + item.slice(1).toLowerCase()).join(" ");
+    // const exBlog=await Blog.findOne({title:theTitle})
+    // if(exBlog){
+    //     return res.status(400).json({message:"Blog with this title already exists"})
+    // }
+    // // const uploadResponse = await cloudNary.uploader.upload(image,{upload_preset: 'blog_images'})
+    // const newBlog=new Blog({
+    //     title:theTitle,
+    //     description:description,
+    //     image:uploadResponse.url,
+    //     isDraft,
+    //     userId
+    // })
+    // try{
+    //     const result=await newBlog.save()
+    //     existingUser.blogs.push(result._id)
+    //     await existingUser.save()
+
+    // }catch(err){
+    //     console.log(err);
+    //     return res.status(500).json({message:err})
+    // }
+    // return res.status(200).json({message:"Blog added successfully"})
 }
 
 export const updateBlog = async (req, res) => {

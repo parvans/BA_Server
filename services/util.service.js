@@ -84,3 +84,26 @@ export const firstNameSecondNameCapForReg = (data) => {
     }
 
 }
+
+export const uppperEveryWord = (data) => {
+  
+    let normal = String(data).toLowerCase();
+
+    if (normal.length === 0) {
+        return '';
+    } else {
+        // Split the name into an array of words
+        const words = normal.split(' ');
+
+        // Capitalize the first letter of each word
+        const capitalizedWords = words.map(word => {
+            return word.charAt(0).toUpperCase() + word.slice(1);
+        });
+
+        // Join the words back into a string
+        const convertedName = capitalizedWords.join(' ');
+
+        return convertedName;
+    }
+
+}

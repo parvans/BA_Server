@@ -6,6 +6,7 @@ import { nanoid } from "nanoid";
 import nodemailer from "nodemailer";
 import { firstNameSecondNameCapForReg, isEmail, isEmpty, isNull, ReE, ReS, too } from "../services/util.service.js";
 import HttpStatus from "http-status"
+import  isValidObjectId from "mongoose";
 dotenv.config();
 
 export const getallUsers = async (req, res) => {
@@ -137,11 +138,7 @@ export const login = async (req, res) => {
     }
     
     if (isNull(checkUser)) {
-        return ReE(
-            res,
-            { message: "User does not exit." },
-            HttpStatus.BAD_REQUEST
-        );
+        return ReE(res,{ message: "User does not exit." },HttpStatus.BAD_REQUEST);
     }
 
     let checkPassword;
@@ -165,7 +162,9 @@ export const login = async (req, res) => {
         return ReE(res, { message: "Something went wrong to genrate token!." }, HttpStatus.INTERNAL_SERVER_ERROR);
     }
 
-    return ReS(res, { message: `Welcome ${checkUser.name}`, token: token }, HttpStatus.OK);
+    
+
+    return ReS(res, { message: `Welcome ${checkUser.name}`, token: token,id:checkUser._id}, HttpStatus.OK);
 
 
 
@@ -191,6 +190,34 @@ export const login = async (req, res) => {
     //     return res.status(404).json({ message: "Couldn't Find User By This Email" })
     // }
 
+}
+
+export const getUserProfile = async (req, res) => {
+    let err;
+    let user = req.user.id;
+    if(isNull(user)){
+        return ReE(res, { message: "Something went wrong" }, HttpStatus.BAD_REQUEST);
+    }
+
+    // if(!isValidObjectId(user)){
+    //     return ReE(res, { message: "Something went wrong" }, HttpStatus.BAD_REQUEST);
+    // }
+
+    let getUser;
+
+    [err, getUser] = await too(User.findById(user).select('-password'));
+
+    if(err){
+        return ReE(res, err, HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+
+    if(isNull(getUser)){
+        return ReE(res, { message: "User does not exist!." }, HttpStatus.BAD_REQUEST);
+    }
+
+    return ReS(res,{message:'User profile',data:getUser},HttpStatus.OK)
+
+    
 }
 
 export const verifyEmail = async (req, res) => {
@@ -282,18 +309,6 @@ export const resetPassword = async (req, res) => {
     }
 }
 
-export const getUserProfile = async (req, res) => {
-    try {
-        const user = await User.findById(req.user.id).select('-password')
-        if(!user){
-            return res.status(400).json({message:"User Not Found"})
-        }
-        return res.status(200).json({ data: user })
-    } catch (error) {
-        return res.status(500).json({ message: error.message })
-    }
-}
-
 export const getOtherUsers = async (req, res) => {
     const keyword = req.query.search
     ? {
@@ -310,4 +325,6 @@ export const getOtherUsers = async (req, res) => {
         return res.status(500).json({message:error.message})
     }
 }
+
+
 
