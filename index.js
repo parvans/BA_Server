@@ -8,7 +8,7 @@ import dataBase from "./config/db.js";
 const app = express();
 let userss=[];
 // Database
-dataBase()
+dataBase();
 
 app.use(cors());
 app.use(bodyParser.json({ limit: '50mb', extended: true }));
